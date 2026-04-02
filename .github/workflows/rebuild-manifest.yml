@@ -1,0 +1,30 @@
+name: Rebuild Manifest
+on:
+  push:
+    paths: ['shards/**']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  rebuild:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Generate manifest
+        run: |
+          FILES=$(ls shards/*.json 2>/dev/null | xargs -I{} basename {} | jq -R . | jq -s .)
+          jq -n \
+            --argjson shards "$FILES" \
+            '{version: 1, updated_at: now | strftime("%Y-%m-%dT%H:%M:%SZ"), shards: $shards}' \
+            > manifest.json
+
+      - name: Commit
+        run: |
+          git config user.name "fragcap[bot]"
+          git config user.email "bot@fragcap.dev"
+          git add manifest.json
+          git diff --cached --quiet || git commit -m "rebuild manifest"
+          git push
