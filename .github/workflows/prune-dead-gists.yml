@@ -1,0 +1,95 @@
+name: Prune Dead Gists
+
+on:
+  schedule:
+    - cron: '0 3 * * 0'  # Every Sunday at 03:00 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  prune:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check and prune dead gists
+        id: prune
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          node - <<'EOF'
+          import { readdir, readFile, writeFile } from 'fs/promises';
+          import { join } from 'path';
+
+          const SHARDS_DIR = './shards';
+          const DELAY_MS = 200; // stay well within GitHub API rate limits
+          const sleep = ms => new Promise(r => setTimeout(r, ms));
+
+          async function isGistAlive(gistId) {
+            const res = await fetch(`https://api.github.com/gists/${gistId}`, {
+              headers: {
+                'Authorization': `Bearer ${process.env.GITHUB_TOKEN}`,
+                'Accept': 'application/vnd.github+json',
+                'User-Agent': 'fragcap-registry-pruner'
+              }
+            });
+            return res.status !== 404;
+          }
+
+          const files = (await readdir(SHARDS_DIR)).filter(f => f.endsWith('.json'));
+          let totalRemoved = 0;
+          let totalChecked = 0;
+          let shardsModified = 0;
+
+          for (const file of files) {
+            const path = join(SHARDS_DIR, file);
+            const shard = JSON.parse(await readFile(path, 'utf8'));
+            const capsules = shard.capsules ?? [];
+            const surviving = [];
+
+            for (const cap of capsules) {
+              await sleep(DELAY_MS);
+              totalChecked++;
+              if (await isGistAlive(cap.gist_id)) {
+                surviving.push(cap);
+              } else {
+                console.log(`DEAD: ${cap.gist_id} (${cap.problem ?? 'no problem text'})`);
+                totalRemoved++;
+              }
+            }
+
+            if (surviving.length !== capsules.length) {
+              if (surviving.length === 0) {
+                // Remove empty shard file entirely
+                await import('fs/promises').then(fs => fs.unlink(path));
+                console.log(`Removed empty shard: ${file}`);
+              } else {
+                await writeFile(path, JSON.stringify({ ...shard, capsules: surviving }, null, 2));
+              }
+              shardsModified++;
+            }
+          }
+
+          console.log(`\nDone. Checked: ${totalChecked} | Removed: ${totalRemoved} | Shards modified: ${shardsModified}`);
+          const summary = `checked=${totalChecked} removed=${totalRemoved} modified=${shardsModified}`;
+          await import('fs/promises').then(fs => fs.appendFile(process.env.GITHUB_OUTPUT, `summary=${summary}\n`));
+          EOF
+
+      - name: Rebuild manifest
+        if: steps.prune.outputs.summary != ''
+        run: |
+          FILES=$(ls shards/*.json 2>/dev/null | xargs -I{} basename {} | jq -R . | jq -s .)
+          jq -n \
+            --argjson shards "$FILES" \
+            '{version: 1, updated_at: now | strftime("%Y-%m-%dT%H:%M:%SZ"), shards: $shards}' \
+            > manifest.json
+
+      - name: Commit changes
+        run: |
+          git config user.name "fragcap[bot]"
+          git config user.email "bot@fragcap.dev"
+          git add shards/ manifest.json
+          git diff --cached --quiet || git commit -m "prune: remove dead gists (${{ steps.prune.outputs.summary }})"
+          git push
