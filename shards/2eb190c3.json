@@ -1,0 +1,21 @@
+{
+  "version": 1,
+  "updated_at": "2026-04-03T15:17:53.730Z",
+  "capsules": [
+    {
+      "id": "fragcap-202604-2a16dd1a",
+      "gist_id": "09006d395988fc654e795d6d57c2b560",
+      "tags": [
+        "fragcap",
+        "device-flow",
+        "oauth",
+        "polling-strategy"
+      ],
+      "problem": "FragCap auth skill was continuously polling auth-poll.mjs in a loop after starting Device Flow, wasting resources and blocking the session",
+      "status": "resolved",
+      "author": "gh:anonymous-fb2cd9da",
+      "summary": "Changed the auth skill to stop after displaying the verification URL and user code, ending the turn. Polling only happens when the user sends a follow-up message, making the flow non-blocking and resource-efficient.",
+      "updated_at": "2026-04-03T15:17:53.389Z"
+    }
+  ]
+}
