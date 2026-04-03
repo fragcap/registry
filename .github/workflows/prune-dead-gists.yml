@@ -62,7 +62,9 @@ jobs:
               const { alive, remaining } = await isGistAlive(cap.gist_id);
               if (remaining < RATE_LIMIT_BUFFER) {
                 console.warn(`Rate limit low (${remaining} remaining) — stopping early.`);
-                surviving.push(cap);
+                if (alive) surviving.push(cap);
+                else totalRemoved++;
+                // Preserve unchecked capsules as-is (will be checked next run)
                 surviving.push(...capsules.slice(capsules.indexOf(cap) + 1));
                 rateLimitHit = true;
                 break outer;
