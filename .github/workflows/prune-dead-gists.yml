@@ -32,18 +32,6 @@ jobs:
           const RATE_LIMIT_BUFFER = 200; // stop if fewer than this many requests remain
           const sleep = ms => new Promise(r => setTimeout(r, ms));
 
-          async function getRateLimitRemaining() {
-            const res = await fetch('https://api.github.com/rate_limit', {
-              headers: {
-                'Authorization': `Bearer ${process.env.GITHUB_TOKEN}`,
-                'Accept': 'application/vnd.github+json',
-                'User-Agent': 'fragcap-registry-pruner'
-              }
-            });
-            const { rate } = await res.json();
-            return rate.remaining;
-          }
-
           async function isGistAlive(gistId) {
             const res = await fetch(`https://api.github.com/gists/${gistId}`, {
               headers: {
@@ -52,7 +40,8 @@ jobs:
                 'User-Agent': 'fragcap-registry-pruner'
               }
             });
-            return res.status !== 404;
+            const remaining = parseInt(res.headers.get('x-ratelimit-remaining') ?? '9999', 10);
+            return { alive: res.status !== 404, remaining };
           }
 
           const files = (await readdir(SHARDS_DIR)).filter(f => f.endsWith('.json'));
@@ -68,17 +57,17 @@ jobs:
             const surviving = [];
 
             for (const cap of capsules) {
-              const remaining = await getRateLimitRemaining();
+              await sleep(DELAY_MS);
+              totalChecked++;
+              const { alive, remaining } = await isGistAlive(cap.gist_id);
               if (remaining < RATE_LIMIT_BUFFER) {
                 console.warn(`Rate limit low (${remaining} remaining) — stopping early.`);
-                surviving.push(...capsules.slice(surviving.length + totalRemoved));
+                surviving.push(cap);
+                surviving.push(...capsules.slice(capsules.indexOf(cap) + 1));
                 rateLimitHit = true;
                 break outer;
               }
-
-              await sleep(DELAY_MS);
-              totalChecked++;
-              if (await isGistAlive(cap.gist_id)) {
+              if (alive) {
                 surviving.push(cap);
               } else {
                 console.log(`DEAD: ${cap.gist_id} (${cap.problem ?? 'no problem text'})`);
@@ -106,6 +95,8 @@ jobs:
       - name: Rebuild manifest
         if: steps.prune.outputs.removed != '0'
         run: |
+          # When shards/ is empty (only .gitkeep exists), ls returns nothing and jq -s . produces [],
+          # which is the correct empty state — no special handling needed.
           FILES=$(ls shards/*.json 2>/dev/null | xargs -I{} basename {} | jq -R . | jq -s .)
           jq -n \
             --argjson shards "$FILES" \

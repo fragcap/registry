@@ -7,7 +7,7 @@ Public discovery index for [FragCap](https://github.com/fragcap) capsules.
 ```
 registry/
 ├── .github/workflows/rebuild-manifest.yml  # Auto-rebuilds manifest on shard push
-├── shards/                                  # User shards (md5(username)[0:4].json)
+├── shards/                                  # User shards (sha256(username)[0:8].json)
 ├── manifest.json                            # Index of all shard filenames
 └── README.md
 ```
