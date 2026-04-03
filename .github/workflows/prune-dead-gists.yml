@@ -16,7 +16,7 @@ jobs:
   prune:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683  # v4.2.2
 
       - name: Check and prune dead gists
         id: prune
@@ -104,9 +104,11 @@ jobs:
             > manifest.json
 
       - name: Commit changes
+        env:
+          PRUNE_SUMMARY: ${{ steps.prune.outputs.summary }}
         run: |
           git config user.name "fragcap[bot]"
           git config user.email "bot@fragcap.dev"
           git add shards/ manifest.json
-          git diff --cached --quiet || git commit -m "prune: remove dead gists (${{ steps.prune.outputs.summary }})"
+          git diff --cached --quiet || git commit -m "prune: remove dead gists ($PRUNE_SUMMARY)"
           git push
