@@ -5,6 +5,10 @@ on:
     - cron: '0 3 * * 0'  # Every Sunday at 03:00 UTC
   workflow_dispatch:
 
+concurrency:
+  group: prune-dead-gists
+  cancel-in-progress: true
+
 permissions:
   contents: write
 
@@ -19,13 +23,26 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          node - <<'EOF'
-          import { readdir, readFile, writeFile } from 'fs/promises';
+          node --input-type=module - <<'EOF'
+          import { readdir, readFile, writeFile, unlink, appendFile } from 'fs/promises';
           import { join } from 'path';
 
           const SHARDS_DIR = './shards';
           const DELAY_MS = 200; // stay well within GitHub API rate limits
+          const RATE_LIMIT_BUFFER = 200; // stop if fewer than this many requests remain
           const sleep = ms => new Promise(r => setTimeout(r, ms));
+
+          async function getRateLimitRemaining() {
+            const res = await fetch('https://api.github.com/rate_limit', {
+              headers: {
+                'Authorization': `Bearer ${process.env.GITHUB_TOKEN}`,
+                'Accept': 'application/vnd.github+json',
+                'User-Agent': 'fragcap-registry-pruner'
+              }
+            });
+            const { rate } = await res.json();
+            return rate.remaining;
+          }
 
           async function isGistAlive(gistId) {
             const res = await fetch(`https://api.github.com/gists/${gistId}`, {
@@ -42,14 +59,23 @@ jobs:
           let totalRemoved = 0;
           let totalChecked = 0;
           let shardsModified = 0;
+          let rateLimitHit = false;
 
-          for (const file of files) {
+          outer: for (const file of files) {
             const path = join(SHARDS_DIR, file);
             const shard = JSON.parse(await readFile(path, 'utf8'));
             const capsules = shard.capsules ?? [];
             const surviving = [];
 
             for (const cap of capsules) {
+              const remaining = await getRateLimitRemaining();
+              if (remaining < RATE_LIMIT_BUFFER) {
+                console.warn(`Rate limit low (${remaining} remaining) — stopping early.`);
+                surviving.push(...capsules.slice(surviving.length + totalRemoved));
+                rateLimitHit = true;
+                break outer;
+              }
+
               await sleep(DELAY_MS);
               totalChecked++;
               if (await isGistAlive(cap.gist_id)) {
@@ -62,8 +88,7 @@ jobs:
 
             if (surviving.length !== capsules.length) {
               if (surviving.length === 0) {
-                // Remove empty shard file entirely
-                await import('fs/promises').then(fs => fs.unlink(path));
+                await unlink(path);
                 console.log(`Removed empty shard: ${file}`);
               } else {
                 await writeFile(path, JSON.stringify({ ...shard, capsules: surviving }, null, 2));
@@ -72,13 +97,14 @@ jobs:
             }
           }
 
-          console.log(`\nDone. Checked: ${totalChecked} | Removed: ${totalRemoved} | Shards modified: ${shardsModified}`);
+          console.log(`\nDone. Checked: ${totalChecked} | Removed: ${totalRemoved} | Shards modified: ${shardsModified}${rateLimitHit ? ' | rate-limit-hit=true' : ''}`);
           const summary = `checked=${totalChecked} removed=${totalRemoved} modified=${shardsModified}`;
-          await import('fs/promises').then(fs => fs.appendFile(process.env.GITHUB_OUTPUT, `summary=${summary}\n`));
+          await appendFile(process.env.GITHUB_OUTPUT, `summary=${summary}\n`);
+          await appendFile(process.env.GITHUB_OUTPUT, `removed=${totalRemoved}\n`);
           EOF
 
       - name: Rebuild manifest
-        if: steps.prune.outputs.summary != ''
+        if: steps.prune.outputs.removed != '0'
         run: |
           FILES=$(ls shards/*.json 2>/dev/null | xargs -I{} basename {} | jq -R . | jq -s .)
           jq -n \
