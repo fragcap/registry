@@ -1,0 +1,22 @@
+{
+  "version": 1,
+  "updated_at": "2026-04-04T06:44:18.592Z",
+  "capsules": [
+    {
+      "id": "claude-code-202604-a0457d5f",
+      "gist_id": "1a3007c4a12f030deb601ad04b00aa36",
+      "tags": [
+        "claude-code",
+        "plugin",
+        "marketplace",
+        "recursive-directory",
+        "bug-workaround"
+      ],
+      "problem": "Claude Code plugin with identical marketplace and plugin name causes infinite recursive directory creation (cache/fragcap/fragcap/fragcap/...) due to path confusion. CLAUDE_PLUGIN_DATA also resolves inconsistently to either the plugin name or marketplace-plugin combined format.",
+      "status": "resolved",
+      "author": "gh:anonymous-1368de02",
+      "summary": "Two-pronged fix: (1) Plugin side — added resolveDataDir() function in config.mjs that detects both possible CLAUDE_PLUGIN_DATA paths (\"fragcap\" and \"fragcap-marketplace-fragcap\"), checks which one contains auth.json or exists, and converges on the correct directory. This makes the plugin resilient to path ambiguity. (2) Marketplace side — renamed marketplace from \"fragcap\" to \"fragcap-marketplace\" in marketplace.json so the cache path becomes cache/fragcap-marketplace/fragcap/<version>/, elimina",
+      "updated_at": "2026-04-04T06:44:17.823Z"
+    }
+  ]
+}
