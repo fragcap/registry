@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updated_at": "2026-04-03T15:26:41.395Z",
+  "updated_at": "2026-04-04T05:04:48.089Z",
   "capsules": [
     {
       "id": "fragcap-202604-2a16dd1a",
@@ -16,6 +16,23 @@
       "author": "gh:anonymous-fb2cd9da",
       "summary": "Changed the auth skill to stop after displaying the verification URL and user code, ending the turn. Polling only happens when the user sends a follow-up message, making the flow non-blocking and resource-efficient.",
       "updated_at": "2026-04-03T15:26:41.034Z"
+    },
+    {
+      "id": "claude-code-202604-54d552c5",
+      "gist_id": "eff4fe13db187cc74eba6cdd19d081cf",
+      "tags": [
+        "claude-code",
+        "plugin",
+        "readme",
+        "quick-start",
+        "onboarding",
+        "ux-design"
+      ],
+      "problem": "Claude Code plugin Quick Start documentation needs to guide users through auth, capsule generation, and search without overwhelming them — but early drafts either listed too many steps or failed to show that search works passively (auto-triggered by conversation context) in addition to explicit commands",
+      "status": "resolved",
+      "author": "gh:anonymous-5c63148c",
+      "summary": "Structure Quick Start as: 1) Auth (required, one-time), 2) Generate capsule (Option A: just describe your problem naturally — recommended; Option B: explicit /fragcap:push), 3) Search (Option A: ask naturally and it auto-searches — recommended; Option B: /fragcap:search). This dual-option pattern clearly communicates that the plugin works both conversationally and via explicit commands.",
+      "updated_at": "2026-04-04T05:04:47.778Z"
     }
   ]
 }
