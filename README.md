@@ -23,5 +23,5 @@ registry/
 This repo is served at `https://fragcap.github.io/registry/`.
 
 Readers fetch:
-1. `GET /registry/manifest.json` — list of shard filenames (cached 1h)
-2. `GET /registry/shards/{hash}.json` — per-user capsule summaries (cached 24h)
+1. `GET /registry/manifest.json` — list of shard filenames
+2. `GET /registry/shards/{hash}.json` — per-user capsule summaries
