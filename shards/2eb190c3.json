@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updated_at": "2026-04-04T05:09:11.113Z",
+  "updated_at": "2026-04-04T05:23:40.778Z",
   "capsules": [
     {
       "id": "fragcap-202604-2a16dd1a",
@@ -28,10 +28,10 @@
         "onboarding",
         "ux-design"
       ],
-      "problem": "Claude Code plugin Quick Start documentation needs to guide users through auth, capsule generation, and search without overwhelming them â but early drafts either listed too many steps or failed to show that search works passively (auto-triggered by conversation context) in addition to explicit commands",
+      "problem": "Claude Code plugin Quick Start documentation needs to guide users through auth, capsule generation, and search without overwhelming them Ã¢ÂÂ but early drafts either listed too many steps or failed to show that search works passively (auto-triggered by conversation context) in addition to explicit commands",
       "status": "resolved",
       "author": "gh:anonymous-5c63148c",
-      "summary": "Structure Quick Start as: 1) Auth (required, one-time), 2) Generate capsule (Option A: just describe your problem naturally â recommended; Option B: explicit /fragcap:push), 3) Search (Option A: ask naturally and it auto-searches â recommended; Option B: /fragcap:search). This dual-option pattern clearly communicates that the plugin works both conversationally and via explicit commands.",
+      "summary": "Structure Quick Start as: 1) Auth (required, one-time), 2) Generate capsule (Option A: just describe your problem naturally Ã¢ÂÂ recommended; Option B: explicit /fragcap:push), 3) Search (Option A: ask naturally and it auto-searches Ã¢ÂÂ recommended; Option B: /fragcap:search). This dual-option pattern clearly communicates that the plugin works both conversationally and via explicit commands.",
       "updated_at": "2026-04-04T05:04:47.778Z"
     },
     {
@@ -47,8 +47,24 @@
       "problem": "When a Claude Code plugin marketplace name and plugin name are identical (e.g., both 'fragcap'), the plugin cache mechanism creates infinite directory nesting like cache/fragcap/fragcap/fragcap/... eventually hitting ENAMETOOLONG errors",
       "status": "open",
       "author": "gh:anonymous-c90ff449",
-      "summary": "Workaround A (recommended): Rename marketplace to differ from plugin name — e.g., marketplace name 'fragcap-marketplace' with plugin name 'fragcap', so install becomes /plugin install fragcap@fragcap-marketplace. Workaround B: Use 'github' source type instead of 'url' in marketplace.json — github type uses owner/repo format with clearer resolution paths. Long-term fix: Report bug to anthropics/claude-code — the cache scanner should not re-identify already-cached plugin directories as new install",
+      "summary": "Workaround A (recommended): Rename marketplace to differ from plugin name â e.g., marketplace name 'fragcap-marketplace' with plugin name 'fragcap', so install becomes /plugin install fragcap@fragcap-marketplace. Workaround B: Use 'github' source type instead of 'url' in marketplace.json â github type uses owner/repo format with clearer resolution paths. Long-term fix: Report bug to anthropics/claude-code â the cache scanner should not re-identify already-cached plugin directories as new install",
       "updated_at": "2026-04-04T05:09:10.746Z"
+    },
+    {
+      "id": "claude-code-202604-d85e6408",
+      "gist_id": "be45986685e6f049c8da0e2720e835dc",
+      "tags": [
+        "claude-code",
+        "plugin-system",
+        "marketplace",
+        "infinite-nesting",
+        "directory-recursion"
+      ],
+      "problem": "When a Claude Code plugin marketplace name and plugin name are identical (e.g., both 'fragcap'), the plugin cache mechanism creates infinite directory nesting like cache/fragcap/fragcap/fragcap/... eventually hitting ENAMETOOLONG errors",
+      "status": "open",
+      "author": "gh:DFerryman",
+      "summary": "Workaround A (recommended): Rename marketplace to differ from plugin name — e.g., marketplace name 'fragcap-marketplace' with plugin name 'fragcap', so install becomes /plugin install fragcap@fragcap-marketplace. Workaround B: Use 'github' source type instead of 'url' in marketplace.json — github type uses owner/repo format with clearer resolution paths. Long-term fix: Report bug to anthropics/claude-code — the cache scanner should not re-identify already-cached plugin directories as new install",
+      "updated_at": "2026-04-04T05:23:40.448Z"
     }
   ]
 }
