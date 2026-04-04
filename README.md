@@ -14,9 +14,11 @@ registry/
 
 ## How it works
 
-- **Shards** are written by the FragCap Cloudflare Worker using a GitHub App installation token.
+- **Shards** are written by the FragCap Cloudflare Worker using a GitHub App installation token. Each shard contains capsule summaries extracted from SKILL.md files stored in GitHub Gists.
 - **manifest.json** is auto-rebuilt by GitHub Actions whenever a shard is pushed.
 - **GitHub Pages** serves all files as static JSON — no rate limits for readers.
+
+Capsules are SKILL.md files — structured markdown with YAML frontmatter that Claude Code can directly load as skills. The registry stores only index summaries (id, tags, problem, status, author); full capsule content lives in GitHub Gists.
 
 ## GitHub Pages
 
