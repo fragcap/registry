@@ -1,0 +1,21 @@
+{
+  "version": 1,
+  "updated_at": "2026-04-04T08:16:23.182Z",
+  "capsules": [
+    {
+      "id": "claude-code-plugin-202604-b27b07da",
+      "gist_id": "e4ae0223bc25e2702f740cb36765bc35",
+      "tags": [
+        "claude-code-plugin",
+        "path-resolution",
+        "data-directory",
+        "bug-fix"
+      ],
+      "problem": "Claude Code plugin data directory path ambiguity: when marketplace name equals plugin name (both 'fragcap'), CLAUDE_PLUGIN_DATA resolves to inconsistent directory names ('fragcap' vs 'fragcap-fragcap'",
+      "status": "resolved",
+      "author": "gh:anonymous-d053b4f9",
+      "summary": "Replace hardcoded directory name candidates with dynamic sibling directory scanning in resolveDataDir(). The function scans the parent directory for any subdirectory containing 'fragcap' in its name and checks for auth.json or capsules/ as data markers. This is resilient to any naming convention Claude Code uses. Also renamed the marketplace to 'fragcap-marketplace' to avoid the name collision, and updated all docs/skills to use environment variables instead of hardcoded paths.",
+      "updated_at": "2026-04-04T08:16:22.841Z"
+    }
+  ]
+}
