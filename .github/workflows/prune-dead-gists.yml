@@ -97,12 +97,16 @@ jobs:
       - name: Rebuild manifest
         if: steps.prune.outputs.removed != '0'
         run: |
-          # When shards/ is empty (only .gitkeep exists), ls returns nothing and jq -s . produces [],
-          # which is the correct empty state — no special handling needed.
-          FILES=$(ls shards/*.json 2>/dev/null | xargs -I{} basename {} | jq -R . | jq -s .)
+          SHARDS='[]'
+          for f in shards/*.json; do
+            [ -f "$f" ] || continue
+            name=$(basename "$f")
+            hash=$(sha256sum "$f" | cut -c1-8)
+            SHARDS=$(echo "$SHARDS" | jq --arg f "$name" --arg h "$hash" '. + [{"file": $f, "hash": $h}]')
+          done
           jq -n \
-            --argjson shards "$FILES" \
-            '{version: 1, updated_at: now | strftime("%Y-%m-%dT%H:%M:%SZ"), shards: $shards}' \
+            --argjson shards "$SHARDS" \
+            '{version: 2, updated_at: now | strftime("%Y-%m-%dT%H:%M:%SZ"), shards: $shards}' \
             > manifest.json
 
       - name: Commit changes
